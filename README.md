@@ -14,3 +14,5 @@ as we need to copy the font to the run directory as well
 The SDL2_ttf library also needs to be added to link using
 
 `LIBS+=-lSDL2_ttf`
+
+Make sure if you need to use the classes you add the same to your .pro file.
