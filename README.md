@@ -1,6 +1,6 @@
 #SDLNGL
 
-As the ngl::Text class is reliant upon QFont at present this class is a drop in replacment using ( [sdl-ttf] (https://www.libsdl.org/projects/SDL_ttf/))
+As the ngl::Text class is reliant upon QFont at present this class is a drop in replacment using  [sdl-ttf] (https://www.libsdl.org/projects/SDL_ttf/)
 eventually all of this will be merged into the core ngl with compile time flags to choose the text rendering engine.
 
 Note the following is added to the copy commands for shadow build
