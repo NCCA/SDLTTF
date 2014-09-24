@@ -1,4 +1,5 @@
 #SDLNGL
+![alt tag](http://nccastaff.bournemouth.ac.uk/jmacey/GraphicsLib/Demos/TTFText.png)
 
 As the ngl::Text class is reliant upon QFont at present this class is a drop in replacment using  [sdl-ttf] (https://www.libsdl.org/projects/SDL_ttf/)
 eventually all of this will be merged into the core ngl with compile time flags to choose the text rendering engine.
