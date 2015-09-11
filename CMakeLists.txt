@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 2.8.11)
 # Name of the project
+set(PROJECT_NAME SDLTTF)
 project(SDLTTF)
 #Bring the headers into the project (local ones)
 include_directories(include $ENV{HOME}/NGL/include)
@@ -40,7 +41,7 @@ message("sdl2-config --libs gives " =${SDL2_LIBRARIES})
 find_package(Qt5OpenGL)
 
 # add exe and link libs this must be after the other defines
-add_executable(SDLTTF ${SOURCES})
+add_executable(${PROJECT_NAME} ${SOURCES})
 
-target_link_libraries(SDLTTF ${PROJECT_LINK_LIBS} Qt5::OpenGL ${SDL2_LIBRARIES}   )
+target_link_libraries(${PROJECT_NAME} ${PROJECT_LINK_LIBS} Qt5::OpenGL ${SDL2_LIBRARIES}   )
 
