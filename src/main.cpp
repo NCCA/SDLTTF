@@ -141,7 +141,7 @@ SDL_GLContext createOpenGLContext(SDL_Window *window)
   #endif
   // set multi sampling else we get really bad graphics that alias
   SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
-  SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES,4);
+  SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES,2);
   // Turn on double buffering with a 24bit Z buffer.
   // You may need to change this to 16 or 32 for your system
   // on mac up to 32 will work but under linux centos build only 16
