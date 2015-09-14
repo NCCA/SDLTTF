@@ -1,27 +1,27 @@
 cmake_minimum_required(VERSION 2.8.11)
 # Name of the project
 set(PROJECT_NAME SDLTTF)
-project(SDLTTF)
+project(${PROJECT_NAME})
 #Bring the headers into the project (local ones)
 include_directories(include $ENV{HOME}/NGL/include)
 
 #the file(GLOB...) allows for wildcard additions of our src dir
-set(SOURCES  ${PROJECT_SOURCE_DIR}/src/main.cpp  
-	 		${PROJECT_SOURCE_DIR}/src/NGLDraw.cpp 
-			${PROJECT_SOURCE_DIR}/src/Text.cpp 
-	  		${PROJECT_SOURCE_DIR}/include/NGLDraw.h  
-			${PROJECT_SOURCE_DIR}/include/Text.h  )
+set(SOURCES src/main.cpp  src/NGLDraw.cpp src/Text.cpp 
+		include/Text.h include/NGLDraw.h  )
 
 # see what platform we are on and set platform defines
 if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 	add_definitions(-DDARWIN)
+	find_library(MACGL OpenGL)
+	set ( PROJECT_LINK_LIBS -lNGL ${MACGL})
 
-elif(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+elseif(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 	add_definitions(-DLINUX)
+	set ( PROJECT_LINK_LIBS -lNGL -lGL)
+
 endif()
 
 # now add NGL specific values
-set ( PROJECT_LINK_LIBS -lNGL -lGL -lSDL2_ttf)
 link_directories( ~/NGL/lib )
 include_directories(~/NGL/include/)
 # as NGL uses Qt we need to define this flag
@@ -36,7 +36,7 @@ message("sdl2-config --cflags gives " =${SDL2INCLUDE})
 
 exec_program(sdl2-config ARGS --libs OUTPUT_VARIABLE SDL2_LIBRARIES)
 message("sdl2-config --libs gives " =${SDL2_LIBRARIES})
-
+list(APPEND PROJECT_LINK_LIBS -lSDL2_ttf)
 # NGL also needs the OpenGL framework from Qt so add it
 find_package(Qt5OpenGL)
 
