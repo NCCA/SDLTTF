@@ -4,6 +4,8 @@ set(PROJECT_NAME SDLTTF)
 project(${PROJECT_NAME})
 #Bring the headers into the project (local ones)
 include_directories(include $ENV{HOME}/NGL/include)
+# use C++ 11
+set(CMAKE_CXX_STANDARD 11)
 
 #the file(GLOB...) allows for wildcard additions of our src dir
 set(SOURCES src/main.cpp  src/NGLDraw.cpp src/Text.cpp 
