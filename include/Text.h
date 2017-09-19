@@ -14,8 +14,8 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef TEXT_H__
-#define TEXT_H__
+#ifndef TEXT_H_
+#define TEXT_H_
 
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -38,10 +38,10 @@
 // must include types.h first for Real and GLEW if required
 
 #include <ngl/Vec2.h>
-#include <ngl/VertexArrayObject.h>
+#include <ngl/SimpleVAO.h>
 #include <ngl/Colour.h>
 #include <string>
-#include <map>
+#include <unordered_map>
 
 
   //----------------------------------------------------------------------------------------------------------------------
@@ -54,7 +54,7 @@
   {
     int width; /// @brief the width of the font
     GLuint textureID; /// @brief the texture id of the font billboard
-    ngl::VertexArrayObject *vao; /// a vao for the font
+    ngl::AbstractVAO *vao; /// a vao for the font
   };
 
 class NGL_DLLEXPORT Text
@@ -114,7 +114,7 @@ private:
   /// to render according to the Qt Docs a hash has faster lookups than QMap
   /// so using this
   //----------------------------------------------------------------------------------------------------------------------
-  std::map <char,FontChar> m_characters;
+  std::unordered_map <char,FontChar> m_characters;
   //----------------------------------------------------------------------------------------------------------------------
   /// extra glue for python lib bindings nothing to see here (unless ....)
   //----------------------------------------------------------------------------------------------------------------------

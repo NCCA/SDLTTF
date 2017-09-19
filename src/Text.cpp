@@ -19,6 +19,7 @@
 #include "Text.h"
 #include <iostream>
 #include <ngl/ShaderLib.h>
+#include <ngl/VAOFactory.h>
 #include "SDL.h"
 #include "SDL_ttf.h"
 
@@ -72,7 +73,7 @@ Text::Text( const std::string &_f, int _size)
   // they will be the same height but will possibly have different widths
   // as some of the fonts will be the same width, to save VAO space we will only create
   // a vao if we don't have one of the set width. To do this we use the has below
-  std::map <int,ngl::VertexArrayObject *> widthVAO;
+  std::unordered_map <int,ngl::AbstractVAO *> widthVAO;
 
   for(char c=startChar; c<=endChar; ++c)
   {
@@ -177,11 +178,11 @@ Text::Text( const std::string &_f, int _size)
 
 
         // now we create a VAO to store the data
-        ngl::VertexArrayObject *vao=ngl::VertexArrayObject::createVOA(GL_TRIANGLES);
+        ngl::AbstractVAO *vao=ngl::VAOFactory::createVAO("simpleVAO",GL_TRIANGLES);
         // bind it so we can set values
         vao->bind();
         // set the vertex data (2 for x,y 2 for u,v)
-        vao->setData(6*sizeof(textVertData),d[0].x);
+        vao->setData(ngl::SimpleVAO::VertexData(6*sizeof(textVertData),d[0].x));
         // now we set the attribute pointer to be 0 (as this matches vertIn in our shader)
         vao->setVertexAttributePointer(0,2,GL_FLOAT,sizeof(textVertData),0);
         // We can now create another set of data (which will be added to the VAO)
@@ -245,7 +246,7 @@ void Text::renderText( float _x, float _y,  const std::string &text ) const
   (*shader)["nglTextShader"]->use();
   // the y pos will always be the same so set it once for each
   // string we are rendering
-  shader->setRegisteredUniform1f("ypos",_y);
+  shader->setUniform("ypos",_y);
   // now enable blending and disable depth sorting so the font renders
   // correctly
   glEnable(GL_BLEND);
@@ -258,11 +259,11 @@ void Text::renderText( float _x, float _y,  const std::string &text ) const
   {
     // set the shader x position this will change each time
     // we render a glyph by the width of the char
-    shader->setRegisteredUniform1f("xpos",_x);
+    shader->setUniform("xpos",_x);
     // so find the FontChar data for our current char
 //    FontChar f = m_characters[text[i].toAscii()];
 //    FontChar f = m_characters[text[i]];
-  std::map <char,FontChar>::const_iterator currentchar=m_characters.find(text[i]);
+  std::unordered_map <char,FontChar>::const_iterator currentchar=m_characters.find(text[i]);
   // make sure we have a valid shader
   if(currentchar!=m_characters.end())
   {
@@ -291,8 +292,8 @@ void Text::renderText( float _x, float _y,  const std::string &text ) const
 void Text::setScreenSize(int _w, int _h )
 {
 
-  float scaleX=2.0/_w;
-  float scaleY=-2.0/_h;
+  float scaleX=2.0f/_w;
+  float scaleY=-2.0f/_h;
   // in shader we do the following code to transform from
   // x,y to NDC
   // gl_Position=vec4( ((xpos+inVert.x)*scaleX)-1,((ypos+inVert.y)*scaleY)+1.0,0.0,1.0); "
@@ -301,8 +302,8 @@ void Text::setScreenSize(int _w, int _h )
   ngl::ShaderLib *shader=ngl::ShaderLib::instance();
   (*shader)["nglTextShader"]->use();
   std::cout<<"scaleX "<<scaleX <<" "<<scaleY<<"\n";
-  shader->setRegisteredUniform1f("scaleX",scaleX);
-  shader->setRegisteredUniform1f("scaleY",scaleY);
+  shader->setUniform("scaleX",scaleX);
+  shader->setUniform("scaleY",scaleY);
 }
 
 //---------------------------------------------------------------------------
@@ -321,7 +322,7 @@ void Text::setColour(const ngl::Colour &_c )
   // make current shader active
   (*shader)["nglTextShader"]->use();
   // set the values
-  shader->setRegisteredUniform3f("textColour",_c.r(),_c.g(),_c.b());
+  shader->setUniform("textColour",_c.m_r,_c.m_g,_c.m_b);
 }
 
 
@@ -332,7 +333,7 @@ void Text::setColour(ngl::Real _r,  ngl::Real _g, ngl::Real _b)
   ngl::ShaderLib *shader=ngl::ShaderLib::instance();
   (*shader)["nglTextShader"]->use();
 
-  shader->setRegisteredUniform3f("textColour",_r,_g,_b);
+  shader->setUniform("textColour",_r,_g,_b);
 }
 
 void Text::setTransform(float _x, float _y)
@@ -341,7 +342,7 @@ void Text::setTransform(float _x, float _y)
   ngl::ShaderLib *shader=ngl::ShaderLib::instance();
   (*shader)["nglTextShader"]->use();
 
-  shader->setRegisteredUniform2f("transform",_x,_y);
+  shader->setUniform("transform",_x,_y);
 }
 
 //---------------------------------------------------------------------------
