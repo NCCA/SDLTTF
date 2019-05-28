@@ -35,13 +35,11 @@
 /// for more details look at the blog post here
 /// http://jonmacey.blogspot.com/2011/10/text-rendering-using-opengl-32.html
 //----------------------------------------------------------------------------------------------------------------------
-// must include types.h first for Real and GLEW if required
 
-#include <ngl/Vec2.h>
-#include <ngl/SimpleVAO.h>
-#include <ngl/Colour.h>
 #include <string>
 #include <unordered_map>
+#include <ngl/Vec3.h>
+#include <ngl/SimpleVAO.h>
 
 
   //----------------------------------------------------------------------------------------------------------------------
@@ -54,7 +52,7 @@
   {
     int width; /// @brief the width of the font
     GLuint textureID; /// @brief the texture id of the font billboard
-    ngl::AbstractVAO *vao; /// a vao for the font
+    std::shared_ptr<ngl::AbstractVAO> vao; /// a vao for the font
   };
 
 class NGL_DLLEXPORT Text
@@ -71,8 +69,7 @@ public:
   //----------------------------------------------------------------------------------------------------------------------
   /// @brief dtor will clean / remove textures and VAO's for the class
   //----------------------------------------------------------------------------------------------------------------------
-  ~Text();
-
+  ~Text()=default;
   //----------------------------------------------------------------------------------------------------------------------
   /// @brief render the text to the screen at _x,_y where 0,0 is top left of the screen
   /// all positioning is relative to the screen size set with the setScreenSize method so it is important that
@@ -97,7 +94,7 @@ public:
   /// @brief set the colour of the font from an Colour
   /// @param[in] _c the colour to set for the font (alpha is overridden by the texture)
   //----------------------------------------------------------------------------------------------------------------------
-  void setColour( const ngl::Colour &_c  );
+  void setColour( const ngl::Vec3 &_c  );
   //----------------------------------------------------------------------------------------------------------------------
   /// @brief set the colour of the font from three floats as a convenience method
   /// @param[in] _r the red component of the colour for the font
@@ -106,7 +103,6 @@ public:
   //----------------------------------------------------------------------------------------------------------------------
   void setColour( ngl::Real _r, ngl::Real _g,  ngl::Real _b  );
 
-  void setTransform(float _x, float _y);
 
 private:
   //----------------------------------------------------------------------------------------------------------------------

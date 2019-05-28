@@ -47,8 +47,8 @@ int main()
    {
      SDLErrorExit("Problem creating OpenGL context");
    }
-   // make this our current GL context (we can have more than one window but in this case not)
-   SDL_GL_MakeCurrent(window, glContext);
+  // make this our current GL context (we can have more than one window but in this case not)
+  SDL_GL_MakeCurrent(window, glContext);
   /* This makes our buffer swap syncronized with the monitor's vertical refresh */
   SDL_GL_SetSwapInterval(1);
   // we need to initialise the NGL lib which will load all of the OpenGL functions, this must

@@ -47,8 +47,8 @@ Text::Text( const std::string &_f, int _size)
 {
 	TTF_Init();
 	TTF_Font *font = TTF_OpenFont(_f.c_str(), _size );
-	SDL_Color color = { 0, 0, 0,0 };
-	if(font ==0 )
+  SDL_Color color = {0,0,0,0};
+  if(font == nullptr )
 	{
 		std::cerr<<"Error loading font "<<TTF_GetError()<<"\n";
 		exit(EXIT_FAILURE);
@@ -73,7 +73,7 @@ Text::Text( const std::string &_f, int _size)
   // they will be the same height but will possibly have different widths
   // as some of the fonts will be the same width, to save VAO space we will only create
   // a vao if we don't have one of the set width. To do this we use the has below
-  std::unordered_map <int,ngl::AbstractVAO *> widthVAO;
+  std::unordered_map <int,std::unique_ptr<ngl::AbstractVAO >> widthVAO;
 
   for(char c=startChar; c<=endChar; ++c)
   {
@@ -89,7 +89,7 @@ Text::Text( const std::string &_f, int _size)
     // need a null terminated string
     cc[1]='\0';
     TTF_SizeText(font,cc,&width,&height);
-    int widthPow2=nearestPowerOfTwo(width);
+    auto widthPow2=nearestPowerOfTwo(width);
 	
     // now we set the texture co-ords for our quad it is a simple
     // triangle billboard with tex-cords as shown
@@ -98,19 +98,20 @@ Text::Text( const std::string &_f, int _size)
     //         | \|
     //  s0,t1  ---- s1,t1
     // each quad will have the same s0 and the range s0-s1 == 0.0 -> 1.0
-    ngl::Real s0=0.0;
+    ngl::Real s0=0.0f;
     // we now need to scale the tex cord to it ranges from 0-1 based on the coverage
     // of the glyph and not the power of 2 texture size. This will ensure that kerns
     // / ligatures match
-    ngl::Real s1=width*1.0/width; // use this on older machines widthPow2;
+    ngl::Real s1=width*1.0f/width; // use this on older machines widthPow2;
     // t0 will always be the same
-    ngl::Real t0=0.0;
+    ngl::Real t0=0.0f;
     // this will scale the height so we only get coverage of the glyph as above
-    ngl::Real t1=height*1.0/height; // use this on older gpus heightPow2;
+    ngl::Real t1=height*1.0f/height; // use this on older gpus heightPow2;
     // we need to store the font width for later drawing
     fc.width=width;
    
     SDL_Surface* msg = TTF_RenderText_Blended( font, cc, color );
+
     // this is needed on some older machines
     //SDL_Surface *powerOfTwo=SDL_CreateRGBSurface(0,widthPow2,heightPow2,32,0,0,0,0);
     //SDL_BlitSurface(msg,NULL,powerOfTwo,NULL);
@@ -178,7 +179,7 @@ Text::Text( const std::string &_f, int _size)
 
 
         // now we create a VAO to store the data
-        ngl::AbstractVAO *vao=ngl::VAOFactory::createVAO("simpleVAO",GL_TRIANGLES);
+        std::unique_ptr<ngl::AbstractVAO> vao=ngl::VAOFactory::createVAO("simpleVAO",GL_TRIANGLES);
         // bind it so we can set values
         vao->bind();
         // set the vertex data (2 for x,y 2 for u,v)
@@ -195,36 +196,23 @@ Text::Text( const std::string &_f, int _size)
         // now unbind
         vao->unbind();
         // store the vao pointer for later use in the draw method
-        fc.vao=vao;
-        widthVAO[width]=vao;
+        fc.vao=std::move(vao);
     }
     else
     {
-      fc.vao=widthVAO[width];
+      fc.vao=std::move(widthVAO[width]);
     }
     // finally add the element to the map, this must be the last
     // thing we do
-    m_characters[c]=fc;
+    m_characters[c]=std::move(fc);
   }
-  std::cout<<"created "<<widthVAO.size()<<" unique billboards\n";
+  ngl::msg->addMessage(fmt::format("Text created {0} unique billboards",widthVAO.size()));
   // set a default colour (black) incase user forgets
-  this->setColour(0,0,0);
-  setTransform(1.0,1.0);
+  setColour(0,0,0);
   
 }
 
 
-//---------------------------------------------------------------------------
-Text::~Text()
-{
-  // our dtor should clear out the textures and remove the VAO's
- /* foreach( FontChar m, m_characters)
-  {
-    glDeleteTextures(1,&m.textureID);
-    m.vao->removeVOA();
-  }
-*/
-}
 
 
 
@@ -243,7 +231,7 @@ void Text::renderText( float _x, float _y,  const std::string &text ) const
   // grab an instance of the shader manager
   ngl::ShaderLib *shader=ngl::ShaderLib::instance();
   // use the built in text rendering shader
-  (*shader)["nglTextShader"]->use();
+  (*shader)[ngl::nglTextShader]->use();
   // the y pos will always be the same so set it once for each
   // string we are rendering
   shader->setUniform("ypos",_y);
@@ -253,21 +241,18 @@ void Text::renderText( float _x, float _y,  const std::string &text ) const
   glDisable(GL_DEPTH_TEST);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   // now loop for each of the char and draw our billboard
-  unsigned int textLength=text.length();
+  size_t textLength=text.length();
 
   for (unsigned int i = 0; i < textLength; ++i)
   {
     // set the shader x position this will change each time
     // we render a glyph by the width of the char
     shader->setUniform("xpos",_x);
-    // so find the FontChar data for our current char
-//    FontChar f = m_characters[text[i].toAscii()];
-//    FontChar f = m_characters[text[i]];
   std::unordered_map <char,FontChar>::const_iterator currentchar=m_characters.find(text[i]);
   // make sure we have a valid shader
   if(currentchar!=m_characters.end())
   {
-	FontChar f=currentchar->second;
+    FontChar f=currentchar->second;
     // bind the pre-generated texture
     glBindTexture(GL_TEXTURE_2D, f.textureID);
     // bind the vao
@@ -315,12 +300,12 @@ void Text::setScreenSize(int _w, int _h )
 // fragColour.rgb=textColour.rgb;
 // fragColour.a=text.a;
 
-void Text::setColour(const ngl::Colour &_c )
+void Text::setColour(const ngl::Vec3 &_c )
 {
   // get shader instance
   ngl::ShaderLib *shader=ngl::ShaderLib::instance();
   // make current shader active
-  (*shader)["nglTextShader"]->use();
+  (*shader)[ngl::nglTextShader]->use();
   // set the values
   shader->setUniform("textColour",_c.m_r,_c.m_g,_c.m_b);
 }
@@ -336,14 +321,6 @@ void Text::setColour(ngl::Real _r,  ngl::Real _g, ngl::Real _b)
   shader->setUniform("textColour",_r,_g,_b);
 }
 
-void Text::setTransform(float _x, float _y)
-{
-
-  ngl::ShaderLib *shader=ngl::ShaderLib::instance();
-  (*shader)["nglTextShader"]->use();
-
-  shader->setUniform("transform",_x,_y);
-}
 
 //---------------------------------------------------------------------------
 

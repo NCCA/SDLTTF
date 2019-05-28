@@ -1,7 +1,6 @@
 #include "NGLDraw.h"
 #include <ngl/ShaderLib.h>
 #include <ngl/NGLInit.h>
-#include <ngl/Material.h>
 #include <ngl/Transformation.h>
 #include <SDL.h>
 const static float INCREMENT=0.01f;
@@ -45,63 +44,48 @@ NGLDraw::NGLDraw()
   shader->linkProgramObject("Phong");
   // and make it active ready to load values
   (*shader)["Phong"]->use();
-  // the shader will use the currently active material and light0 so set them
-  ngl::Material m(ngl::STDMAT::GOLD);
-  // load our material values to the shader into the structure material (see Vertex shader)
-  m.loadToShader("material");
-  // Now we will create a basic Camera from the graphics library
+    // Now we will create a basic Camera from the graphics library
   // This is a static camera so it only needs to be set once
   // First create Values for the camera position
-  ngl::Vec3 from(0,1,1);
+  ngl::Vec3 from(0,1,4);
   ngl::Vec3 to(0,0,0);
   ngl::Vec3 up(0,1,0);
   // now load to our new camera
-  m_cam= new ngl::Camera(from,to,up);
-  // set the shape using FOV 45 Aspect Ratio based on Width and Height
-  // The final two are near and far clipping planes of 0.5 and 10
-  m_cam->setShape(45,(float)720.0/576.0,0.05,350);
-  shader->setUniform("viewerPos",m_cam->getEye().toVec3());
-  // now create our light this is done after the camera so we can pass the
-  // transpose of the projection matrix to the light to do correct eye space
-  // transformations
-  ngl::Mat4 iv=m_cam->getViewMatrix();
-  iv.transpose();
-  m_light = new ngl::Light(ngl::Vec3(-2,5,2),ngl::Colour(1,1,1,1),ngl::Colour(1,1,1,1),ngl::LightModes::POINTLIGHT );
-  m_light->setTransform(iv);
-  // load these values to the shader as well
-  m_light->loadToShader("light");
-  m_text = new Text("font/arial.ttf",40);
-  m_text->setColour(1.0,0.0,0.0);
+  m_view=ngl::lookAt(from,to,up);
+  ngl::Vec4 lightPos(-2.0f,5.0f,2.0f,0.0f);
+  shader->setUniform("light.position",lightPos);
+  shader->setUniform("light.ambient",0.0f,0.0f,0.0f,1.0f);
+  shader->setUniform("light.diffuse",1.0f,1.0f,1.0f,1.0f);
+  shader->setUniform("light.specular",0.8f,0.8f,0.8f,1.0f);
+  // gold like phong material
+  shader->setUniform("material.ambient",0.274725f,0.1995f,0.0745f,0.0f);
+  shader->setUniform("material.diffuse",0.75164f,0.60648f,0.22648f,0.0f);
+  shader->setUniform("material.specular",0.628281f,0.555802f,0.3666065f,0.0f);
+  shader->setUniform("material.shininess",51.2f);
+  shader->setUniform("viewerPos",from);
+
+  m_project=ngl::perspective(45.0f,720.0f/576.0f,0.05f,350.0f);
+  shader->setUniform("viewerPos",from);
+  m_text.reset(new Text("font/arial.ttf",40));
+  m_text->setColour(1.0f,0.0f,0.0f);
 }
 
 NGLDraw::~NGLDraw()
 {
-  std::cout<<"Shutting down NGL, removing VAO's and Shaders\n";
-  delete m_light;
-  delete m_cam;
+  ngl::msg->addMessage("Shutting down NGL, removing VAO's and Shaders");
 }
 
 void NGLDraw::resize(int _w, int _h)
 {
   glViewport(0,0,_w,_h);
   // now set the camera size values as the screen size has changed
-  m_cam->setShape(45,(float)_w/_h,0.05,350);
-  std::cout<<"resize\n";
+  m_project=ngl::perspective(45,float(_w)/_h,0.05f,350.0f);
+
   m_text->setScreenSize(_w,_h);
   // Ok so this is still a bit of a hack we need to scale our text based
   // on max screen size so first get the size of the screen
   SDL_Rect s;
   SDL_GetDisplayBounds(0,&s);
-  float x,y;
-  // now get a scale transform for the text shader
-
-
-  x=1.0-float(s.w-_w)/s.w;
-  y=1.0-float(s.h-_h)/s.h;
-  std::cout<<s.w-_w<<" "<<s.h-_h<<"\n";
-  std::cout<<x<<" "<<y<<"\n";
-  // now set the new transform element for this shader
-  m_text->setTransform(x,y);
   draw();
 
 }
@@ -142,7 +126,7 @@ void NGLDraw::draw()
   m_text->renderText(10,180,"Check the Source code and .pro file as you will need to use SDL_ttf");
 
 
-  m_text->renderText(1000,240,"Check Right Border");
+  m_text->renderText(1024,240,"Check Right Border");
   m_text->renderText(10,840,"Check bottom");
 
 
@@ -158,8 +142,8 @@ void NGLDraw::loadMatricesToShader()
   ngl::Mat3 normalMatrix;
   ngl::Mat4 M;
   M=m_mouseGlobalTX;
-  MV=  m_cam->getViewMatrix()*M;
-  MVP= m_cam->getVPMatrix()*M;
+  MV=  m_view*M;
+  MVP= m_project*MV;
   normalMatrix=MV;
   normalMatrix.inverse().transpose();
   shader->setUniform("MV",MV);

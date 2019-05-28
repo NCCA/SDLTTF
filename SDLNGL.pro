@@ -4,7 +4,7 @@ TARGET=SDLTTF
 OBJECTS_DIR=obj
 # core Qt Libs to use add more here if needed.
 QT+=gui opengl core
-
+macx:DEFINES += GL_SILENCE_DEPRECATION
 # as I want to support 4.8 and 5 this will set a flag for some of the mac stuff
 # mainly in the types.h file for the setMacVisual which is native in Qt5
 isEqual(QT_MAJOR_VERSION, 5) {
@@ -17,7 +17,7 @@ message(output from sdl2-config --cflags added to CXXFLAGS= $$QMAKE_CXXFLAGS)
 
 LIBS+=$$system(sdl2-config  --libs)
 message(output from sdl2-config --libs added to LIB=$$LIBS)
-
+macx:LIBS+=$$system(sdl2-config --static-libs)
 LIBS+=-lSDL2_ttf
 
 # where to put moc auto generated files
