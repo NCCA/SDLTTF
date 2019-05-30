@@ -142,7 +142,6 @@ SDL_GLContext createOpenGLContext(SDL_Window *window)
   #endif
 
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-    SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
 
   
   // set multi sampling else we get really bad graphics that alias
